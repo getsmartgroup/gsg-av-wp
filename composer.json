@@ -1,5 +1,5 @@
 {
-    "name": "asas-virtuais/gsg-av-wp",
+    "name": "getsmartgroup/gsg-av-wp",
     "type": "library",
     "description": "Library for coding WordPress plugins",
     "keywords": ["wordpress","wordpress-plugin","library"],
