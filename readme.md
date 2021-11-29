@@ -14,7 +14,7 @@
 ## Requiring the Framework:
 
 ```shell
-composer require asas-virtuais/gsg-av-wp
+composer require getsmartgroup/gsg-av-wp
 ```
 
 <hr>
