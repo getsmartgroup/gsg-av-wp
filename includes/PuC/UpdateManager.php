@@ -11,7 +11,9 @@ class UpdateManager {
 
 	public $pre_release_plugins = [];
 	public function maybe_add_pre_release_settings_page() {
-_print($this->pre_release_plugins);
+		if(!apply_filters('puc_update_manager/maybe_add_pre_release_settings_page', true))
+			return ;
+
 		if ( ! empty( $this->pre_release_plugins ) ) {
 
 			// Create the Release Settings page
@@ -26,7 +28,7 @@ _print($this->pre_release_plugins);
 			}
 
 			// Add the page fields
-			acf_add_local_field_group( av_acf_field_group( 
+			asas_virtuais()->acf_manager()->add_field_group( av_acf_field_group( 
 				'Plugin Release Options',
 				[ [ av_acf_location( 'options_page', 'acf-options-release-settings' ) ] ],
 				$fields
@@ -44,50 +46,48 @@ _print($this->pre_release_plugins);
 		return self::$instance;
 	}
 
-	public function register_plugin( $plugin_file, $args ) {
-		$plugin_name = get_plugin_data( $plugin_file )['Name'];
-		$plugin_slug = wp_basename( $plugin_file, '.php' );
+	public function register_plugin( $framework_instance, $args ) {
+		try {
+			$plugin_file = $framework_instance->plugin_file;
+			$plugin_name = $framework_instance->plugin_name;
+			$plugin_slug = $framework_instance->plugin_slug;
 
-		if ( $this->valid_args( $args ) ) {
-
-			if ( isset( $args['pre_release_options'] ) ) {
-
-				$this->pre_release_plugins[$plugin_slug] = $plugin_name;
-
-				if ( get_field( av_sanitize_title_with_underscores($plugin_slug)."_pre_release", 'option' ) ) {
-					return $this->set_with_pre_releases( $plugin_slug, $args['pre_release_options'] );
-				}
+			$puc_path = $args['puc_path'] ?? false;
+			$meta_url = $args['meta_url'] ?? false;
+			$pre_release_url = $args['pre_release_url'] ?? false;
+	
+			if ( ! class_exists( 'Puc_v4_Factory' ) && ! include_once( $puc_path ) ) {
+				return asas_virtuais()->admin_manager()->admin_warning( 'Plugin updater could not be loaded for the plugin: ' . $plugin_name );
 			}
-
-			return $this->build_update_checker( $plugin_slug, $args );
-
-		} else {
-			asas_virtuais()->admin_manager()->admin_warning( 'Plugin updater initialized incorrectly for the plugin: ' . $plugin_name );
+			if ( $meta_url && $plugin_slug ) {
+				if ( $pre_release_url ) {
+					$this->pre_release_plugins[$plugin_slug] = $plugin_name;
+					$_acf_field_key		=	av_sanitize_title_with_underscores($plugin_slug)."_pre_release";
+					$_acf_field_value	=	av_acf_get_field( $_acf_field_key, 'option' );
+					$_run_update_checker=	apply_filters('puc_update_manager/run_update_checker', $_acf_field_value, $_acf_field_key );
+					if ( $_run_update_checker ) {
+						return $this->build_update_checker( $pre_release_url, $plugin_file, $plugin_name );
+					}
+				}
+				return $this->build_update_checker( $meta_url, $plugin_file, $plugin_name );
+			} else {
+				asas_virtuais()->admin_manager()->admin_warning( 'Plugin updater initialized incorrectly for the plugin: ' . $plugin_name );
+			}	
+		} catch (\Throwable $th) {
+			$framework_instance->admin_manager()->admin_error_from_exception( $th );
 		}
 	}
 
-	private function set_with_pre_releases( $plugin_slug, $args ) {
-		if ( $this->valid_args( $args ) ) {
-			return $this->build_update_checker( $plugin_slug, $args );
+	private function build_update_checker( $meta_url, $plugin_file, $plugin_slug ) {
+		if ( class_exists( 'Puc_v4_Factory' ) ) {
+			$myUpdateChecker = \Puc_v4_Factory::buildUpdateChecker(
+				$meta_url,
+				$plugin_file,
+				$plugin_slug
+			);
 		} else {
-			asas_virtuais()->admin_manager()->admin_warning( 'Plugin updater initialized incorrectly, using Pre-Release for the plugin: ' . $plugin_name );
+			asas_virtuais()->admin_manager()->admin_warning( 'Plugin updater class not found for the plugin: ' . $plugin_slug );
 		}
-	}
-	private function build_update_checker( $plugin_slug, $args ) {
-		require_once $args['puc_path'];
-		$myUpdateChecker = \Puc_v4_Factory::buildUpdateChecker(
-			$args['meta_url'],
-			$args['plugin_file'],
-			$plugin_slug,
-		);
-	}
-
-	private function valid_args( $args ) {
-		return isset(
-			$args['plugin_file'],
-			$args['puc_path'],
-			$args['meta_url'],
-		);
 	}
 
 }

@@ -30,19 +30,19 @@ if ( ! class_exists( '\AsasVirtuais\WP\Framework\TakeOff' ) ) {
 		public function load_framework( $autoload ) {
 			/** Set autoload */
 			$includes_dir = dirname( $this->file ) . '/includes/';
-			$autoload->setPsr4( 'AsasVirtuaisWP\\', $includes_dir );
+			$autoload->addPsr4( 'AsasVirtuaisWP\\', $includes_dir );
 
 			/** Require asas_virtuais() */
 			require_once( $includes_dir . 'functions.php' );
 
 			/** Require other libraries */
-			foreach( glob( __DIR__ . "/lib/*.php") as $lib_file ){
+			foreach( glob( dirname( $this->file ) . "/lib/*.php") as $lib_file ){
 				require_once $lib_file;
 			}
 
 			/** Initialize framework default instance */
 			asas_virtuais()->initialize( __FILE__, [
-				'version' => '4.0.3',
+				'version' => $this->version,
 				'prefix' => 'asas_'
 			] );
 
@@ -75,4 +75,4 @@ if ( ! class_exists( '\AsasVirtuais\WP\Framework\TakeOff' ) ) {
 	}
 }
 
-return TakeOff::instance()->register_version( __FILE__, '4.0.3' );
+return TakeOff::instance()->register_version( __FILE__, '6.8.3' );

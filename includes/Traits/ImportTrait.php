@@ -15,6 +15,14 @@ trait ImportTrait {
 		 */
 		abstract function get_acf_id();
 		/**
+		 * Update meta
+		 * @uses \update_post_meta
+		 * @param string $key
+		 * @param mixed $value
+		 * @return boolean
+		 */
+		abstract function update_meta( $key, $value );
+		/**
 		 * Undocumented function
 		 * @see import
 		 * @return array Array of essential args on self::import data param
@@ -52,11 +60,14 @@ trait ImportTrait {
 		 */
 		public static function import( $data ) {
 			static::validate_import_data( $data );
+			$insert_data = $data['insert_data'];
 			$existing_index = static::find_existing_index( $data );
+
 			if ( $existing_index ) {
 				$static = $existing_index;
+				av_import_admin_notice( "Imported object has existing index:\n" . var_export( $static->get_id(), true ) );
 			} else {
-				$static = static::insert_from_import( $data );
+				$static = static::insert_from_import( $insert_data );
 			}
 
 			if( isset( $data['metadata'] ) ) {
@@ -67,6 +78,9 @@ trait ImportTrait {
 			}
 			if( isset( $data['terms'] ) && is_array( $data['terms'] ) ) {
 				$static->import_taxonomies( $data['terms'] );
+			}
+			if ( isset( $data['post_thumbnail'] ) ) {
+				$static->import_thumbnail_from_url( $data['post_thumbnail'] );
 			}
 
 			return $static;
@@ -83,17 +97,10 @@ trait ImportTrait {
 		 * @param boolean $validate To validate the $data or not
 		 * @return StaticInstance
 		 */
-		public static function insert_from_import( $data, $validate = false ) {
+		public static function insert_from_import( $args ) {
 
-			if ( $validate !== false ) {
-				static::validate_import_data( $data );
-			}
-
-			$args = [];
-			foreach ( static::insert_args() as $arg_key => $default_value ) {
-				$args[ $arg_key ] = $data[ $arg_key ] ?? $default_value;
-			}
-			$result = static::insert( $args );
+			$defaults = static::insert_args();
+			$result = static::insert( array_replace( $defaults, $args ) );
 
 			if ( ! $result ) {
 				throw new \Exception( "Failed to insert: \n" . av_wp_error_message( $result ) );
@@ -121,27 +128,17 @@ trait ImportTrait {
 					} else {
 						$result = $this->update_meta( $key, $value );
 						$identifier = $this->get_id();
-					}
-					if ( $result ) {
-						av_import_admin_notice( "Successfully imported meta $key to: $identifier with:\n" . var_export( $value, true ) );
-					} else {
-						throw new \Exception( "Failed to import meta $key to: $identifier with \n" . var_export( $value, true ) );
+						if ( $result ) {
+							av_import_admin_notice( "Successfully imported meta $key to: $identifier with:\n" . var_export( $value, true ) );
+						} else {
+							throw new \Exception( "Failed to import meta $key to: $identifier with \n" . var_export( $value, true ) );
+						}
 					}
 				} catch (\Throwable $th) {
 					// TODO handle exception
 					av_import_admin_exception( $th );
 				}
 			}
-		}
-		/**
-		 * Update meta
-		 * @uses \update_post_meta
-		 * @param string $key
-		 * @param mixed $value
-		 * @return boolean
-		 */
-		public function update_meta( $key, $value ) {
-			return update_post_meta( $this->get_id(), $key, $value );
 		}
 		/**
 		 * Sets object Taxonomies
@@ -166,10 +163,30 @@ trait ImportTrait {
 		 * @return void
 		 */
 		protected static function validate_import_data( array $data ) {
-			foreach ( static::essential_import_args() as $arg ) {
-				if ( ( ! isset( $data[ $arg ] ) ) || ( empty( $data[ $arg ] ) ) ) {
-					throw new \Exception( "Missing or empty essential import $arg in import: \n" . var_export( $data, true ) );
+			if ( ! isset( $data['insert_data'] ) ) {
+				throw new \Exception( "Missing insert data on import, received only:\n" . var_export( $data, true ) );
+			}
+			$result = av_array_keys_exist_recursive( $data, static::essential_import_args() );
+			if ( ! $result ) {
+				throw new \Exception( "Missing or empty essential import $arg in import: \n" . var_export( $data, true ) );
+			}
+		}
+
+		public function import_thumbnail_from_url( string $url ) {
+			try {
+				if ( $url ) {
+					$attach_id = av_insert_attachment_from_url( $url );
+					if ( $attach_id ) {
+						$result = set_post_thumbnail( $this->get_id(), $attach_id );
+						if ( $result ) {
+							av_import_admin_notice( "Set the featured image $attach_id to the post " . $this->get_id() );
+						} else {
+							av_import_admin_error( "Failed to set the featured image $attach_id to the post " . $this->get_id() );
+						}
+					}
 				}
+			} catch (\Throwable $th) {
+				av_import_admin_exception( "Failed to set the featured image from the url $url to the post " . $this->get_id() );
 			}
 		}
 
