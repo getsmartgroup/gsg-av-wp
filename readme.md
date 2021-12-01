@@ -24,7 +24,7 @@ composer require getsmartgroup/gsg-av-wp
 
 1 - Require TakeOff.php
 ```php
-$loader = require_once( plugin_dir_path( __FILE__ ) . 'vendor/asas-virtuais/gsg-av-wp/TakeOff.php' );
+$loader = require_once( plugin_dir_path( __FILE__ ) . 'vendor/getsmartgroup/gsg-av-wp/TakeOff.php' );
 ```
 2 - Call the fly method, passing the composer autoload and the plugin file path.
  - It is better to do this under the plugins_loaded hook
