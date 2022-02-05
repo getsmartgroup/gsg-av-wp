@@ -63,7 +63,7 @@ class UpdateManager {
 				if ( $pre_release_url ) {
 					$this->pre_release_plugins[$plugin_slug] = $plugin_name;
 					$_acf_field_key		=	av_sanitize_title_with_underscores($plugin_slug)."_pre_release";
-					$_acf_field_value	=	av_acf_get_field( $_acf_field_key, 'option' );
+					$_acf_field_value	=	get_option( $_acf_field_key );
 					$_run_update_checker=	apply_filters('puc_update_manager/run_update_checker', $_acf_field_value, $_acf_field_key );
 					if ( $_run_update_checker ) {
 						return $this->build_update_checker( $pre_release_url, $plugin_file, $plugin_name );
