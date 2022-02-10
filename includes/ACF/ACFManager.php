@@ -137,7 +137,7 @@ class ACFManager {
 			if ( is_numeric( $id ) ) {
 				$value = get_post_meta( $id, $name, true );
 			} elseif( in_array( $id, [ 'option', 'options' ] ) ) {
-				$value = get_option( $name );
+				$value = get_option( 'options_' . $name );
 			} else {
 				$explode = explode( '_', $id );
 				$identifier = $explode[0] ?? false;
