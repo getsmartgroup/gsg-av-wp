@@ -75,7 +75,7 @@ class ImportManager {
 			$name = $this->framework_instance->plugin_name;
 		}
 		$field_name = av_acf_field_name( "$name Token" );
-		return av_acf_get_field( $field_name, 'options' );
+		return get_option( 'options_' . $field_name );
 	}
 
 	public function set_token( $token ) {
