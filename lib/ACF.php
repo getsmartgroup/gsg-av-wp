@@ -100,6 +100,16 @@ if ( ! defined( 'AV_ACF_FIELD_PREFIX' ) ) {
 			return av_acf_field( $label, $field_data, $overwrite );
 		}
 	}
+	/** Message field defaults */
+	if (!function_exists('av_acf_message_field')) {
+		function av_acf_message_field($label, $message, $overwrite = []) {
+			$field_data = [
+				'type'              => 'message',
+				'message'           => $message,
+			];
+			return av_acf_field($label, $field_data, $overwrite);
+		}
+	}
 	/** Text field defaults */
 	if ( ! function_exists( 'av_acf_text_field' ) ) {
 		function av_acf_text_field( $label, $overwrite = [] ) {
