@@ -100,6 +100,21 @@ if ( ! defined( 'AV_ACF_FIELD_PREFIX' ) ) {
 			return av_acf_field( $label, $field_data, $overwrite );
 		}
 	}
+	/** File field defaults */
+	if (!function_exists('av_acf_file_field')) {
+		function av_acf_file_field($label, $overwrite = [])
+		{
+			$field_data = [
+				'type' => 'file',
+				'return_format' => 'array',
+				'library' => 'all',
+				'min_size' => '',
+				'max_size' => '',
+				'mime_types' => '',
+			];
+			return av_acf_field($label, $field_data, $overwrite);
+		}
+	}
 	/** Message field defaults */
 	if (!function_exists('av_acf_message_field')) {
 		function av_acf_message_field($label, $message, $overwrite = []) {
