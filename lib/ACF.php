@@ -523,6 +523,9 @@ if ( ! defined( 'AV_ACF_FIELD_PREFIX' ) ) {
 						case 'image':
 							$r = av_acf_import_image( $name, $value, $object_id );
 							break;
+						case 'file':
+							$r = av_acf_import_image($name, $value, $object_id);
+							break;
 						default:
 							$r = av_acf_import_field( $name, $value, $object_id );
 							break;
