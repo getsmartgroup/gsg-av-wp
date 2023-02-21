@@ -186,7 +186,7 @@ trait ImportTrait {
 					}
 				}
 			} catch (\Throwable $th) {
-				av_import_admin_exception( "Failed to set the featured image from the url $url to the post " . $this->get_id() );
+				av_import_admin_exception( $th );
 			}
 		}
 
