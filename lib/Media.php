@@ -158,6 +158,9 @@ if ( ! function_exists( 'av_download_attachment_from_url' ) ) {
 				case 'image/gif':
 					$extension = 'gif';
 					break;
+				case 'image/webp':
+					$extension = 'webp';
+					break;
 				case 'application/pdf':
 					$extension = 'pdf';
 					break;
