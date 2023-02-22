@@ -137,8 +137,37 @@ if ( ! function_exists( 'av_download_attachment_from_url' ) ) {
 				}
 			}
 		}
+		$content_type = false;
+		$extension = false;
+		if (isset($response['headers']['content-type'])) {
+			$content_type = $response['headers']['content-type'];
+		} elseif (isset($response['headers']['Content-Type'])) {
+			$content_type = $response['headers']['Content-Type'];
+		}
 
-		$upload = wp_upload_bits( basename( $url ), null, $response['body'] );
+		if(!$content_type) {
+			$extension = pathinfo($url, PATHINFO_EXTENSION);
+		} else {
+			switch ($content_type) {
+				case 'image/jpeg':
+					$extension = 'jpg';
+					break;
+				case 'image/png':
+					$extension = 'png';
+					break;
+				case 'image/gif':
+					$extension = 'gif';
+					break;
+				case 'application/pdf':
+					$extension = 'pdf';
+					break;
+				default:
+					$extension = pathinfo($url, PATHINFO_EXTENSION);
+					break;
+			}
+		}
+		$file_name = basename($url, '.' . pathinfo($url, PATHINFO_EXTENSION));
+		$upload = wp_upload_bits( $file_name . '.' . $extension, null, $response['body'] );
 		if ( ! empty( $upload['error'] ) ) {
 			throw new \Exception( 'Image request upload error: ' . var_export( $upload, true ) );
 		}
